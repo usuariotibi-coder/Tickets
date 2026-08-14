@@ -1,0 +1,118 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String     @id @default(cuid())
+  name          String
+  email         String     @unique
+  password      String?
+  role          String     @default("user")
+  department    String?
+  offTopicCount Int        @default(0)
+  isBlocked     Boolean    @default(false)
+  blockedReason String?
+  blockedAt     DateTime?
+  createdAt     DateTime   @default(now())
+  conversations Conversation[]
+  tickets       Ticket[]
+  loans         Loan[]
+  messages      Message[]
+  blockLogs     BlockLog[]
+}
+
+model AllowedEmail {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  note      String?
+  createdAt DateTime @default(now())
+}
+
+model BlockLog {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reason       String
+  conversation Json
+  blockedAt    DateTime @default(now())
+  unblockedAt  DateTime?
+}
+
+model Conversation {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  messages  Message[]
+  tickets   Ticket[]
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role           String
+  content        String       @default("")
+  toolCalls      Json?
+  userId         String?
+  user           User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt      DateTime     @default(now())
+}
+
+model Ticket {
+  id             String       @id @default(cuid())
+  number         Int          @unique @default(autoincrement())
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversationId String?
+  conversation   Conversation? @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+  title          String
+  description    String
+  category       String
+  priority       String       @default("normal")
+  status         String       @default("pendiente")
+  requestedItems Json?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  loan           Loan?
+}
+
+model InventoryItem {
+  id           String   @id @default(cuid())
+  name         String
+  category     String
+  quantity     Int
+  minThreshold Int      @default(0)
+  unit         String   @default("unidad")
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Loan {
+  id           String   @id @default(cuid())
+  ticketId     String   @unique
+  ticket       Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  userId       String?
+  user         User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  borrowerName String
+  items        Json
+  status       String   @default("prestado")
+  borrowedAt   DateTime @default(now())
+  returnedAt   DateTime?
+}
+
+model Procedure {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  category  String   @default("general")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
