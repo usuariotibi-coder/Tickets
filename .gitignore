@@ -8,4 +8,6 @@ dist
 !.env.example
 *.log
 next-env.d.ts
+tsconfig.tsbuildinfo
 .DS_Store
+memoria.txt
