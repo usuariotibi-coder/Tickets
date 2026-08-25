@@ -4,7 +4,7 @@ datasource db {
 }
 
 model User {
-  id            String     @id @default(cuid())
+  id            String     @id @default(dbgenerated("gen_random_uuid()"))
   name          String
   email         String     @unique
   password      String?
@@ -23,14 +23,14 @@ model User {
 }
 
 model AllowedEmail {
-  id        String   @id @default(cuid())
+  id        String   @id @default(dbgenerated("gen_random_uuid()"))
   email     String   @unique
   note      String?
   createdAt DateTime @default(now())
 }
 
 model BlockLog {
-  id           String   @id @default(cuid())
+  id           String   @id @default(dbgenerated("gen_random_uuid()"))
   userId       String
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   reason       String
@@ -40,17 +40,17 @@ model BlockLog {
 }
 
 model Conversation {
-  id        String    @id @default(cuid())
+  id        String    @id @default(dbgenerated("gen_random_uuid()"))
   userId    String
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  updatedAt DateTime  @default(now()) @updatedAt
   messages  Message[]
   tickets   Ticket[]
 }
 
 model Message {
-  id             String       @id @default(cuid())
+  id             String       @id @default(dbgenerated("gen_random_uuid()"))
   conversationId String
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   role           String
@@ -62,7 +62,7 @@ model Message {
 }
 
 model Ticket {
-  id             String       @id @default(cuid())
+  id             String       @id @default(dbgenerated("gen_random_uuid()"))
   number         Int          @unique @default(autoincrement())
   userId         String
   user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -75,12 +75,12 @@ model Ticket {
   status         String       @default("pendiente")
   requestedItems Json?
   createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  updatedAt      DateTime     @default(now()) @updatedAt
   loan           Loan?
 }
 
 model InventoryItem {
-  id           String   @id @default(cuid())
+  id           String   @id @default(dbgenerated("gen_random_uuid()"))
   name         String
   category     String
   quantity     Int
@@ -88,11 +88,11 @@ model InventoryItem {
   unit         String   @default("unidad")
   notes        String?
   createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  updatedAt    DateTime @default(now()) @updatedAt
 }
 
 model Loan {
-  id           String   @id @default(cuid())
+  id           String   @id @default(dbgenerated("gen_random_uuid()"))
   ticketId     String   @unique
   ticket       Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
   userId       String?
@@ -105,10 +105,10 @@ model Loan {
 }
 
 model Procedure {
-  id        String   @id @default(cuid())
+  id        String   @id @default(dbgenerated("gen_random_uuid()"))
   title     String
   content   String
   category  String   @default("general")
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime @default(now()) @updatedAt
 }
