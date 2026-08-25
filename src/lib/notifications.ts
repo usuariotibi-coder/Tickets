@@ -84,6 +84,9 @@ function buildTicketEmail(ticket: TicketInfo): EmailPayload {
   };
 }
 
+const escapeTelegramMarkdown = (text: string): string =>
+  text.replace(/[_*[\]()~`>#+\-=|{}.!\\]/g, "\\$&");
+
 export async function notifyTicketCreated(ticket: TicketInfo) {
   const results = { telegram: false, email: false };
 
@@ -91,14 +94,15 @@ export async function notifyTicketCreated(ticket: TicketInfo) {
   const telegramChatId = process.env.TELEGRAM_CHAT_ID;
   if (isConfigured(telegramToken) && isConfigured(telegramChatId)) {
     try {
+      const md = escapeTelegramMarkdown;
       const text = [
-        `📋 *Nueva solicitud #${ticket.number}*`,
-        `👤 ${ticket.requesterName} (${ticket.requesterEmail})`,
-        `📁 Categoría: ${ticket.category}`,
-        `⚡ Prioridad: ${ticket.priority}`,
+        `📋 *Nueva solicitud #${md(String(ticket.number))}*`,
+        `👤 ${md(ticket.requesterName)} (${md(ticket.requesterEmail)})`,
+        `📁 Categoría: ${md(ticket.category)}`,
+        `⚡ Prioridad: ${md(ticket.priority)}`,
         ``,
-        `*${ticket.title}*`,
-        ticket.description,
+        `*${md(ticket.title)}*`,
+        md(ticket.description),
       ].join("\n");
 
       const res = await fetch(
@@ -109,7 +113,7 @@ export async function notifyTicketCreated(ticket: TicketInfo) {
           body: JSON.stringify({
             chat_id: telegramChatId,
             text,
-            parse_mode: "Markdown",
+            parse_mode: "MarkdownV2",
           }),
         }
       );
