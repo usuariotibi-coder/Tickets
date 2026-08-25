@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { usePopups } from "@/components/ui/popups";
 
 type BlockedUser = {
   id: string;
@@ -16,15 +17,22 @@ type BlockedUser = {
 
 export function BlocksManager({ users }: { users: BlockedUser[] }) {
   const router = useRouter();
+  const { confirm, alert } = usePopups();
   const [busy, setBusy] = useState(false);
 
   async function unblock(blockLogId: string) {
-    if (!confirm("¿Desbloquear a este usuario?")) return;
+    const ok = await confirm({
+      title: "Desbloquear usuario",
+      message: "¿Seguro que quieres desbloquear a este usuario?",
+      variant: "success",
+      confirmLabel: "Desbloquear",
+    });
+    if (!ok) return;
     setBusy(true);
     const res = await fetch(`/api/admin/blocks/${blockLogId}`, { method: "PATCH" });
     setBusy(false);
     if (!res.ok) {
-      alert("Error al desbloquear.");
+      alert({ title: "Error", message: "No se pudo desbloquear al usuario.", variant: "danger" });
       return;
     }
     router.refresh();

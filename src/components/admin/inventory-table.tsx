@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { usePopups } from "@/components/ui/popups";
 
 type Item = {
   id: string;
@@ -22,6 +23,7 @@ const CATEGORIES = [
 
 export function InventoryTable({ items }: { items: Item[] }) {
   const router = useRouter();
+  const { confirm, alert } = usePopups();
   const [editing, setEditing] = useState<Item | null>(null);
   const [showNew, setShowNew] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -34,7 +36,10 @@ export function InventoryTable({ items }: { items: Item[] }) {
       body: body ? JSON.stringify(body) : undefined,
     });
     setBusy(false);
-    if (!res.ok) alert("Error al guardar.");
+    if (!res.ok) {
+      alert({ title: "Error al guardar", variant: "danger" });
+      return;
+    }
     setEditing(null);
     setShowNew(false);
     router.refresh();
@@ -125,9 +130,14 @@ export function InventoryTable({ items }: { items: Item[] }) {
                     >
                       Editar
                     </button>
-                    <button
-                      onClick={() => {
-                        if (confirm(`¿Eliminar "${i.name}"?`)) mutate("DELETE", `/api/admin/inventory/${i.id}`);
+<button
+                      onClick={async () => {
+                        const ok = await confirm({
+                          title: "Eliminar artículo",
+                          message: `¿Eliminar "${i.name}" del inventario?`,
+                          confirmLabel: "Eliminar",
+                        });
+                        if (ok) mutate("DELETE", `/api/admin/inventory/${i.id}`);
                       }}
                       className="ml-1 rounded-lg px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
                     >

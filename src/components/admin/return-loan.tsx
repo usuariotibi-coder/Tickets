@@ -2,13 +2,21 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { usePopups } from "@/components/ui/popups";
 
 export function ReturnLoanButton({ id, alreadyReturned }: { id: string; alreadyReturned: boolean }) {
   const router = useRouter();
+  const { confirm } = usePopups();
   const [busy, setBusy] = useState(false);
 
   async function markReturned() {
-    if (!confirm("¿Marcar este préstamo como devuelto?")) return;
+    const ok = await confirm({
+      title: "Marcar préstamo como devuelto",
+      message: "¿Seguro que quieres marcar este préstamo como devuelto?",
+      variant: "success",
+      confirmLabel: "Marcar devuelto",
+    });
+    if (!ok) return;
     setBusy(true);
     await fetch(`/api/admin/loans/${id}/return`, { method: "POST" });
     setBusy(false);

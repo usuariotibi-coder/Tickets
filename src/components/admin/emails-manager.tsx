@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { usePopups } from "@/components/ui/popups";
 
 type EmailItem = {
   id: string;
@@ -12,6 +13,7 @@ type EmailItem = {
 
 export function EmailsManager({ emails }: { emails: EmailItem[] }) {
   const router = useRouter();
+  const { confirm, alert } = usePopups();
   const [email, setEmail] = useState("");
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
@@ -37,8 +39,13 @@ export function EmailsManager({ emails }: { emails: EmailItem[] }) {
     router.refresh();
   }
 
-  async function remove(id: string) {
-    if (!confirm("¿Quitar este correo de la lista?")) return;
+async function remove(id: string) {
+    const ok = await confirm({
+      title: "Quitar correo de la lista",
+      message: `¿Seguro que quieres quitar este correo de la lista de permitidos?`,
+      confirmLabel: "Quitar",
+    });
+    if (!ok) return;
     await fetch(`/api/admin/emails/${id}`, { method: "DELETE" });
     router.refresh();
   }

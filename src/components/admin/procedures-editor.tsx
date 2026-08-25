@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { usePopups } from "@/components/ui/popups";
 
 type Procedure = {
   id: string;
@@ -13,6 +14,7 @@ type Procedure = {
 
 export function ProceduresEditor({ procedures }: { procedures: Procedure[] }) {
   const router = useRouter();
+  const { confirm, alert } = usePopups();
   const [editing, setEditing] = useState<Procedure | null>(null);
   const [creating, setCreating] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -25,7 +27,10 @@ export function ProceduresEditor({ procedures }: { procedures: Procedure[] }) {
       body: body ? JSON.stringify(body) : undefined,
     });
     setBusy(false);
-    if (!res.ok) alert("Error al guardar.");
+    if (!res.ok) {
+      alert({ title: "Error al guardar", variant: "danger" });
+      return;
+    }
     setEditing(null);
     setCreating(false);
     router.refresh();
@@ -68,9 +73,13 @@ export function ProceduresEditor({ procedures }: { procedures: Procedure[] }) {
                   Editar
                 </button>
                 <button
-                  onClick={() => {
-                    if (confirm(`¿Eliminar "${p.title}"?`))
-                      mutate("DELETE", `/api/admin/procedures/${p.id}`);
+                  onClick={async () => {
+                    const ok = await confirm({
+                      title: "Eliminar procedimiento",
+                      message: `¿Eliminar "${p.title}"?`,
+                      confirmLabel: "Eliminar",
+                    });
+                    if (ok) mutate("DELETE", `/api/admin/procedures/${p.id}`);
                   }}
                   className="rounded-lg px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
                 >
