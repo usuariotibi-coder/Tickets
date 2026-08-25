@@ -124,21 +124,22 @@ export default function Chat() {
     inputRef.current?.focus();
   }
 
-  return (
-    <div className="flex h-full flex-col">
-      <header className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3">
-        <div className="flex items-center gap-2">
-          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-600 text-sm font-bold text-white">
-            TI
-          </span>
-          <div>
-            <p className="text-sm font-semibold">Centro de Asistencia TI</p>
-            <p className="text-xs text-slate-500">
-              {loading ? "Escribiendo..." : "En línea"}
-            </p>
+return (
+    <div className="flex h-dvh flex-col">
+      <header className="border-b border-slate-200 bg-white px-4 py-3">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-600 text-sm font-bold text-white">
+              TI
+            </span>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold">Centro de Asistencia TI</p>
+              <p className="truncate text-xs text-slate-500">
+                {loading ? "Escribiendo..." : "En línea"}
+              </p>
+            </div>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
           {isStaff && (
             <a
               href="/admin"
@@ -161,12 +162,13 @@ export default function Chat() {
           >
             Nueva conversación
           </button>
-          <button
+<button
             onClick={() => signOut({ callbackUrl: "/login" })}
             className="rounded-lg px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-900"
           >
             Cerrar sesión
           </button>
+          </div>
         </div>
       </header>
 

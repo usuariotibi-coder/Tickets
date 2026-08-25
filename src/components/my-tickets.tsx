@@ -173,7 +173,7 @@ function TicketCard({ ticket }: { ticket: Ticket }) {
   }, [cfg]);
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md sm:p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
@@ -294,44 +294,46 @@ export default function MyTickets() {
   ];
 
   return (
-    <div className="flex h-full flex-col">
-      <header className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3">
-        <div className="flex items-center gap-2">
-          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-600 text-sm font-bold text-white">
-            TI
-          </span>
-          <div>
-            <p className="text-sm font-semibold">Mis solicitudes</p>
-            <p className="text-xs text-slate-500">
-              {lastRefresh
-                ? `Actualizado ${lastRefresh.toLocaleTimeString("es-MX", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    second: "2-digit",
-                  })}`
-                : "Cargando..."}
-            </p>
+    <div className="flex h-dvh flex-col">
+      <header className="border-b border-slate-200 bg-white px-4 py-3">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-600 text-sm font-bold text-white">
+              TI
+            </span>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold">Mis solicitudes</p>
+              <p className="truncate text-xs text-slate-500">
+                {lastRefresh
+                  ? `Actualizado ${lastRefresh.toLocaleTimeString("es-MX", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      second: "2-digit",
+                    })}`
+                  : "Cargando..."}
+              </p>
+            </div>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Link
-            href="/chat"
-            className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
-          >
-            Asistente
-          </Link>
-          <button
-            onClick={() => signOut({ callbackUrl: "/login" })}
-            className="rounded-lg px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-900"
-          >
-            Cerrar sesión
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              href="/chat"
+              className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+            >
+              Asistente
+            </Link>
+            <button
+              onClick={() => signOut({ callbackUrl: "/login" })}
+              className="rounded-lg px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-900"
+            >
+              Cerrar sesión
+            </button>
+          </div>
         </div>
       </header>
 
       <main className="chat-scroll flex-1 overflow-y-auto">
-        <div className="mx-auto w-full max-w-3xl px-4 py-6">
-          <div className="rounded-2xl bg-gradient-to-br from-brand-600 to-brand-700 p-6 text-white shadow-sm">
+        <div className="mx-auto w-full max-w-3xl px-4 py-5 sm:px-6 sm:py-6">
+          <div className="rounded-2xl bg-gradient-to-br from-brand-600 to-brand-700 p-5 text-white shadow-sm sm:p-6">
             <p className="text-lg font-semibold">
               {firstName ? `Hola, ${firstName}` : "Hola"} 👋
             </p>
@@ -350,7 +352,7 @@ export default function MyTickets() {
               <SkeletonCard />
             </div>
           ) : tickets.length === 0 ? (
-            <div className="mt-5 rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center">
+            <div className="mt-5 rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center sm:p-10">
               <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand-600/10 text-brand-600">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -372,7 +374,7 @@ export default function MyTickets() {
             </div>
           ) : (
             <>
-              <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="mt-5 grid grid-cols-2 gap-2.5 sm:grid-cols-4 sm:gap-3">
                 {stats.map((s) => (
                   <div key={s.key} className="rounded-2xl border border-slate-200 bg-white p-4">
                     <div className="flex items-center gap-1.5">
