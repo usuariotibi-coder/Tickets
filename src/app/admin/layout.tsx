@@ -11,6 +11,7 @@ const nav = [
   { href: "/admin/inventory", label: "Inventario", icon: "📦" },
   { href: "/admin/loans", label: "Préstamos", icon: "🔄" },
   { href: "/admin/conversations", label: "Conversaciones", icon: "💬" },
+  { href: "/admin/users", label: "Usuarios", icon: "👥" },
   { href: "/admin/procedures", label: "Procedimientos", icon: "📄" },
   { href: "/admin/emails", label: "Correos permitidos", icon: "📧" },
   { href: "/admin/blocks", label: "Bloqueos", icon: "🚫" },
