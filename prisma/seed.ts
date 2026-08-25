@@ -27,13 +27,13 @@ async function main() {
   );
 
   const allowedEmails = [
-    { email: testUserEmail, note: "Usuario de prueba (ingreso sin contraseña)" },
+    { email: testUserEmail, name: "Usuario de Prueba", note: "Usuario de prueba (ingreso sin contraseña)" },
   ];
   for (const ae of allowedEmails) {
     await pool.query(
-      `INSERT INTO "AllowedEmail" (id, email, note) VALUES ($1, $2, $3)
+      `INSERT INTO "AllowedEmail" (id, email, name, note) VALUES ($1, $2, $3, $4)
        ON CONFLICT (email) DO NOTHING`,
-      [randomUUID(), ae.email, ae.note]
+      [randomUUID(), ae.email, ae.name, ae.note]
     );
   }
 

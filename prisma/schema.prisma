@@ -25,6 +25,7 @@ model User {
 model AllowedEmail {
   id        String   @id @default(dbgenerated("gen_random_uuid()"))
   email     String   @unique
+  name      String?
   note      String?
   createdAt DateTime @default(now())
 }

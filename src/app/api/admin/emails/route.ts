@@ -5,6 +5,7 @@ import { requireStaff, unauthorized } from "@/lib/admin";
 type AllowedEmailRow = {
   id: string;
   email: string;
+  name: string | null;
   note: string | null;
   createdAt: Date;
 };
@@ -21,6 +22,7 @@ export async function POST(req: Request) {
   if (!(await requireStaff())) return unauthorized();
   const body = await req.json().catch(() => ({}));
   const email = String(body.email || "").toLowerCase().trim();
+  const name = String(body.name || "").trim() || null;
   const note = String(body.note || "").trim() || null;
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -37,8 +39,8 @@ export async function POST(req: Request) {
   }
 
   const rows = await query<AllowedEmailRow>(
-    `INSERT INTO "AllowedEmail" (email, note) VALUES ($1, $2) RETURNING *`,
-    [email, note]
+    `INSERT INTO "AllowedEmail" (email, name, note) VALUES ($1, $2, $3) RETURNING *`,
+    [email, name, note]
   );
   const item = rows[0];
   return NextResponse.json({ item }, { status: 201 });

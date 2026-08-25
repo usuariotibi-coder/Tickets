@@ -15,6 +15,7 @@ type UserRow = {
 type AllowedEmailRow = {
   id: string;
   email: string;
+  name: string | null;
   note: string | null;
   createdAt: Date;
 };
@@ -65,9 +66,10 @@ export const authOptions: NextAuthOptions = {
 
         let user = existing;
         if (!user) {
+          const userName = allowed.name || email.split("@")[0];
           const rows = await query<UserRow>(
             `INSERT INTO "User" (email, name, role, password) VALUES ($1, $2, 'user', NULL) RETURNING *`,
-            [email, email.split("@")[0]]
+            [email, userName]
           );
           user = rows[0];
         }

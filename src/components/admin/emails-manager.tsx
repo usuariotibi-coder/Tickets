@@ -7,6 +7,7 @@ import { usePopups } from "@/components/ui/popups";
 type EmailItem = {
   id: string;
   email: string;
+  name: string | null;
   note: string | null;
   createdAt: string;
 };
@@ -15,6 +16,7 @@ export function EmailsManager({ emails }: { emails: EmailItem[] }) {
   const router = useRouter();
   const { confirm, alert } = usePopups();
   const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -26,7 +28,7 @@ export function EmailsManager({ emails }: { emails: EmailItem[] }) {
     const res = await fetch("/api/admin/emails", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, note }),
+      body: JSON.stringify({ email, name, note }),
     });
     setBusy(false);
     if (!res.ok) {
@@ -35,6 +37,7 @@ export function EmailsManager({ emails }: { emails: EmailItem[] }) {
       return;
     }
     setEmail("");
+    setName("");
     setNote("");
     router.refresh();
   }
@@ -54,7 +57,17 @@ async function remove(id: string) {
     <div className="space-y-4">
       <form onSubmit={add} className="rounded-2xl border border-brand-600/30 bg-brand-600/5 p-5">
         <h3 className="mb-4 text-sm font-semibold text-slate-700">Agregar correo permitido</h3>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+<div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div>
+            <label className="text-xs font-medium text-slate-600">Nombre (opcional)</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Ej. Juan Pérez"
+              className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-600 focus:outline-none"
+            />
+          </div>
           <div>
             <label className="text-xs font-medium text-slate-600">Correo</label>
             <input
@@ -66,7 +79,7 @@ async function remove(id: string) {
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-600 focus:outline-none"
             />
           </div>
-          <div className="sm:col-span-2">
+          <div>
             <label className="text-xs font-medium text-slate-600">Nota (opcional)</label>
             <input
               value={note}
@@ -99,8 +112,11 @@ async function remove(id: string) {
               key={e.id}
               className="flex items-center justify-between border-b border-slate-100 px-4 py-3 last:border-0 hover:bg-slate-50"
             >
-              <div>
-                <p className="text-sm font-medium text-slate-900">{e.email}</p>
+<div>
+                <p className="text-sm font-medium text-slate-900">
+                  {e.name ? <>{e.name} · </> : null}
+                  <span className={e.name ? "font-normal text-slate-600" : ""}>{e.email}</span>
+                </p>
                 <p className="text-xs text-slate-500">
                   {e.note || "Sin nota"} · agregado {new Date(e.createdAt).toLocaleDateString("es-MX")}
                 </p>

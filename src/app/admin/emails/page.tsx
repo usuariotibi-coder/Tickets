@@ -7,6 +7,7 @@ export const dynamic = "force-dynamic";
 type AllowedEmailRow = {
   id: string;
   email: string;
+  name: string | null;
   note: string | null;
   createdAt: Date;
 };
