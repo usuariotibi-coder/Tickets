@@ -1,10 +1,19 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { query, queryOne } from "@/lib/db";
 import { requireStaff, unauthorized } from "@/lib/admin";
+
+type AllowedEmailRow = {
+  id: string;
+  email: string;
+  note: string | null;
+  createdAt: Date;
+};
 
 export async function GET() {
   if (!(await requireStaff())) return unauthorized();
-  const emails = await prisma.allowedEmail.findMany({ orderBy: { createdAt: "desc" } });
+  const emails = await query<AllowedEmailRow>(
+    `SELECT * FROM "AllowedEmail" ORDER BY "createdAt" DESC`
+  );
   return NextResponse.json({ emails });
 }
 
@@ -19,11 +28,18 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Correo inválido" }, { status: 400 });
   }
 
-  const existing = await prisma.allowedEmail.findUnique({ where: { email } });
+  const existing = await queryOne<AllowedEmailRow>(
+    'SELECT * FROM "AllowedEmail" WHERE email = $1',
+    [email]
+  );
   if (existing) {
     return NextResponse.json({ error: "Ese correo ya está en la lista" }, { status: 409 });
   }
 
-  const item = await prisma.allowedEmail.create({ data: { email, note } });
+  const rows = await query<AllowedEmailRow>(
+    `INSERT INTO "AllowedEmail" (email, note) VALUES ($1, $2) RETURNING *`,
+    [email, note]
+  );
+  const item = rows[0];
   return NextResponse.json({ item }, { status: 201 });
 }

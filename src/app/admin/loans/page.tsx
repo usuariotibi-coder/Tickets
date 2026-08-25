@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { query } from "@/lib/db";
 import { PageHeader, Badge, formatDate } from "@/components/admin/ui";
 import { ReturnLoanButton } from "@/components/admin/return-loan";
 
@@ -6,11 +6,28 @@ export const dynamic = "force-dynamic";
 
 type LoanItem = { name: string; quantity: number };
 
+type LoanRow = {
+  id: string;
+  ticketId: string;
+  borrowerName: string;
+  items: LoanItem[];
+  status: string;
+  borrowedAt: Date;
+  returnedAt: Date | null;
+  user: { id: string; name: string; email: string } | null;
+  ticket: { id: string; number: number; title: string; status: string };
+};
+
 export default async function LoansPage() {
-  const loans = await prisma.loan.findMany({
-    orderBy: { borrowedAt: "desc" },
-    include: { user: true, ticket: true },
-  });
+  const loans = await query<LoanRow>(
+    `SELECT l.*,
+       CASE WHEN u.id IS NULL THEN NULL ELSE json_build_object('id', u.id, 'name', u.name, 'email', u.email) END AS "user",
+       CASE WHEN t.id IS NULL THEN NULL ELSE json_build_object('id', t.id, 'number', t.number, 'title', t.title, 'status', t.status) END AS ticket
+     FROM "Loan" l
+     LEFT JOIN "User" u ON u.id = l."userId"
+     LEFT JOIN "Ticket" t ON t.id = l."ticketId"
+     ORDER BY l."borrowedAt" DESC`
+  );
 
   return (
     <div>

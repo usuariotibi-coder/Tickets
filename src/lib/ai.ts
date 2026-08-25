@@ -1,6 +1,52 @@
 import OpenAI from "openai";
-import { prisma } from "@/lib/prisma";
+import { query } from "@/lib/db";
 import { notifyTicketCreated } from "@/lib/notifications";
+
+type ProcedureRow = {
+  id: string;
+  title: string;
+  content: string;
+  category: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+type InventoryRow = {
+  id: string;
+  name: string;
+  category: string;
+  quantity: number;
+  minThreshold: number;
+  unit: string;
+  notes: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+type TicketRow = {
+  id: string;
+  number: number;
+  title: string;
+  description: string;
+  category: string;
+  priority: string;
+  status: string;
+  requestedItems: unknown;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+type LoanRow = {
+  id: string;
+  ticketId: string;
+  userId: string | null;
+  borrowerName: string;
+  items: unknown;
+  status: string;
+  borrowedAt: Date;
+  returnedAt: Date | null;
+  user: { id: string; email: string } | null;
+};
 
 const openai = new OpenAI({
   apiKey: process.env.DEEPSEEK_API_KEY || "sk-no-key",
@@ -144,16 +190,12 @@ async function executeTool(
 ): Promise<string> {
   switch (name) {
     case "search_procedures": {
-      const query = String(args.query || "");
-      const procedures = await prisma.procedure.findMany({
-        where: {
-          OR: [
-            { title: { contains: query, mode: "insensitive" } },
-            { content: { contains: query, mode: "insensitive" } },
-            { category: { contains: query, mode: "insensitive" } },
-          ],
-        },
-      });
+      const q = String(args.query || "");
+      const like = `%${q}%`;
+      const procedures = await query<ProcedureRow>(
+        `SELECT * FROM "Procedure" WHERE title ILIKE $1 OR content ILIKE $2 OR category ILIKE $3`,
+        [like, like, like]
+      );
       if (procedures.length === 0) return "No se encontraron procedimientos relacionados.";
       return procedures
         .map((p) => `TÍTULO: ${p.title}\nCONTENIDO:\n${p.content}`)
@@ -161,7 +203,9 @@ async function executeTool(
     }
 
     case "get_inventory": {
-      const items = await prisma.inventoryItem.findMany({ orderBy: { name: "asc" } });
+      const items = await query<InventoryRow>(
+        `SELECT * FROM "InventoryItem" ORDER BY name ASC`
+      );
       if (items.length === 0) return "No hay artículos registrados en el inventario.";
       return items
         .map((i) => {
@@ -178,26 +222,26 @@ async function executeTool(
       const priority = priorities.includes(args.priority as never) ? (args.priority as string) : "normal";
       const requestedItems = Array.isArray(args.requestedItems) ? args.requestedItems : [];
 
-      const ticket = await prisma.ticket.create({
-        data: {
-          userId: user.id,
+      const ticketRows = await query<TicketRow>(
+        `INSERT INTO "Ticket" ("userId", title, description, category, priority, "requestedItems")
+         VALUES ($1, $2, $3, $4, $5, $6::jsonb) RETURNING *`,
+        [
+          user.id,
           title,
           description,
           category,
           priority,
-          requestedItems: requestedItems.length ? requestedItems : undefined,
-        },
-      });
+          requestedItems.length ? JSON.stringify(requestedItems) : null,
+        ]
+      );
+      const ticket = ticketRows[0];
 
       if (category === "prestamo") {
-        await prisma.loan.create({
-          data: {
-            ticketId: ticket.id,
-            userId: user.id,
-            borrowerName: user.name,
-            items: requestedItems,
-          },
-        });
+        await query(
+          `INSERT INTO "Loan" ("ticketId", "userId", "borrowerName", items)
+           VALUES ($1, $2, $3, $4::jsonb)`,
+          [ticket.id, user.id, user.name, JSON.stringify(requestedItems)]
+        );
       }
 
       const notify = await notifyTicketCreated({
@@ -227,11 +271,10 @@ async function executeTool(
     }
 
     case "get_my_tickets": {
-      const tickets = await prisma.ticket.findMany({
-        where: { userId: user.id },
-        orderBy: { createdAt: "desc" },
-        take: 10,
-      });
+      const tickets = await query<TicketRow>(
+        `SELECT * FROM "Ticket" WHERE "userId" = $1 ORDER BY "createdAt" DESC LIMIT 10`,
+        [user.id]
+      );
       if (tickets.length === 0) return "No tienes solicitudes registradas.";
       return tickets
         .map(
@@ -244,11 +287,13 @@ async function executeTool(
     case "get_active_loans": {
       if (user.role !== "staff")
         return "Acceso denegado: esta información es solo para el departamento de TI.";
-      const loans = await prisma.loan.findMany({
-        where: { status: "prestado" },
-        include: { user: true },
-        orderBy: { borrowedAt: "desc" },
-      });
+      const loans = await query<LoanRow>(
+        `SELECT l.*, CASE WHEN u.id IS NULL THEN NULL ELSE json_build_object('id', u.id, 'email', u.email) END AS "user"
+         FROM "Loan" l
+         LEFT JOIN "User" u ON u.id = l."userId"
+         WHERE l.status = 'prestado'
+         ORDER BY l."borrowedAt" DESC`
+      );
       if (loans.length === 0) return "No hay préstamos activos.";
       return loans
         .map(
@@ -313,10 +358,9 @@ export async function runAssistant({
   user: ChatUser;
   history: StoredMessage[];
 }) {
-  const procedures = await prisma.procedure.findMany({
-    orderBy: { updatedAt: "desc" },
-    take: 30,
-  });
+  const procedures = await query<ProcedureRow>(
+    `SELECT * FROM "Procedure" ORDER BY "updatedAt" DESC LIMIT 30`
+  );
 
   const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
     { role: "system", content: buildSystemPrompt(user, procedures) },

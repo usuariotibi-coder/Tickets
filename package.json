@@ -4,35 +4,44 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "next build",
     "start": "next start",
-    "postinstall": "prisma generate",
+    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
     "db:push": "prisma db push",
-    "db:seed": "prisma db seed"
+    "db:seed": "prisma db seed",
+    "db:deploy": "prisma db push && prisma db seed"
   },
   "dependencies": {
-    "@prisma/client": "^5.20.0",
     "bcryptjs": "^2.4.3",
+    "dotenv": "^17.4.2",
     "next": "^14.2.15",
     "next-auth": "^4.24.7",
     "nodemailer": "^7.0.7",
     "openai": "^4.60.0",
+    "pg": "^8.23.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@opennextjs/cloudflare": "^1.15.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20.16.10",
     "@types/nodemailer": "^6.4.16",
+    "@types/pg": "^8.23.1",
     "@types/react": "^18.3.10",
     "@types/react-dom": "^18.3.0",
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.47",
-    "prisma": "^5.20.0",
+    "prisma": "^6.19.0",
     "tailwindcss": "^3.4.13",
-    "typescript": "^5.6.2"
+    "tsx": "^4.23.12",
+    "typescript": "^5.6.2",
+    "wrangler": "^4.125.0"
   },
   "prisma": {
-    "seed": "node prisma/seed.mjs"
+    "seed": "tsx prisma/seed.ts"
   }
 }

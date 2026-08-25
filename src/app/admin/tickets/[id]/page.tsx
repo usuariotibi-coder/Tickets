@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { prisma } from "@/lib/prisma";
+import { queryOne } from "@/lib/db";
 import {
   PageHeader,
   Badge,
@@ -13,19 +13,48 @@ import { TicketStatusButton } from "@/components/admin/ticket-status";
 
 export const dynamic = "force-dynamic";
 
+type UserObj = { id: string; name: string; email: string; role: string };
+type MessageObj = { id: string; role: string; content: string; createdAt: Date };
+type TicketRow = {
+  id: string;
+  number: number;
+  title: string;
+  description: string;
+  category: string;
+  priority: string;
+  status: string;
+  requestedItems: { name: string; quantity: number }[];
+  createdAt: Date;
+  user: UserObj;
+  conversation: { id: string; messages: MessageObj[] } | null;
+  loan: { id: string; status: string; borrowedAt: Date; returnedAt: Date | null } | null;
+};
+
 export default async function TicketDetailPage({ params }: { params: { id: string } }) {
-  const ticket = await prisma.ticket.findUnique({
-    where: { id: params.id },
-    include: {
-      user: true,
-      conversation: { include: { messages: { orderBy: { createdAt: "asc" } } } },
-      loan: true,
-    },
-  });
+  const ticket = await queryOne<TicketRow>(
+    `SELECT t.*,
+       json_build_object('id', u.id, 'name', u.name, 'email', u.email, 'role', u.role) AS "user",
+       CASE WHEN c.id IS NULL THEN NULL ELSE
+         json_build_object('id', c.id, 'userId', c."userId", 'createdAt', c."createdAt", 'updatedAt', c."updatedAt",
+           'messages', COALESCE((
+             SELECT json_agg(json_build_object('id', m.id, 'role', m.role, 'content', m.content, 'createdAt', m."createdAt") ORDER BY m."createdAt" ASC)
+             FROM "Message" m WHERE m."conversationId" = c.id
+           ), '[]'))
+       END AS conversation,
+       CASE WHEN l.id IS NULL THEN NULL ELSE
+         json_build_object('id', l.id, 'status', l.status, 'borrowedAt', l."borrowedAt", 'returnedAt', l."returnedAt")
+       END AS loan
+     FROM "Ticket" t
+     JOIN "User" u ON u.id = t."userId"
+     LEFT JOIN "Conversation" c ON c.id = t."conversationId"
+     LEFT JOIN "Loan" l ON l."ticketId" = t.id
+     WHERE t.id = $1`,
+    [params.id]
+  );
 
   if (!ticket) notFound();
 
-  const items = (ticket.requestedItems as { name: string; quantity: number }[]) || [];
+  const items = ticket.requestedItems || [];
 
   return (
     <div>

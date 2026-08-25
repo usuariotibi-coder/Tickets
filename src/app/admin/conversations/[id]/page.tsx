@@ -1,23 +1,46 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { prisma } from "@/lib/prisma";
+import { queryOne } from "@/lib/db";
 import { PageHeader, formatDate } from "@/components/admin/ui";
 
 export const dynamic = "force-dynamic";
+
+type UserObj = { id: string; name: string; email: string; role: string };
+type MessageObj = { id: string; role: string; content: string; createdAt: Date };
+type ConversationRow = {
+  id: string;
+  updatedAt: Date;
+  user: UserObj;
+  messages: MessageObj[];
+  tickets: {
+    id: string;
+    number: number;
+    title: string;
+    status: string;
+  }[];
+};
 
 export default async function ConversationDetailPage({
   params,
 }: {
   params: { id: string };
 }) {
-  const conversation = await prisma.conversation.findUnique({
-    where: { id: params.id },
-    include: {
-      user: true,
-      messages: { orderBy: { createdAt: "asc" } },
-      tickets: true,
-    },
-  });
+  const conversation = await queryOne<ConversationRow>(
+    `SELECT c.*,
+       json_build_object('id', u.id, 'name', u.name, 'email', u.email, 'role', u.role) AS "user",
+       COALESCE((
+         SELECT json_agg(json_build_object('id', m.id, 'role', m.role, 'content', m.content, 'createdAt', m."createdAt") ORDER BY m."createdAt" ASC)
+         FROM "Message" m WHERE m."conversationId" = c.id
+       ), '[]') AS messages,
+       COALESCE((
+         SELECT json_agg(json_build_object('id', t.id, 'number', t.number, 'title', t.title, 'status', t.status))
+         FROM "Ticket" t WHERE t."conversationId" = c.id
+       ), '[]') AS tickets
+     FROM "Conversation" c
+     JOIN "User" u ON u.id = c."userId"
+     WHERE c.id = $1`,
+    [params.id]
+  );
 
   if (!conversation) notFound();
 

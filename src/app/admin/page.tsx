@@ -1,26 +1,53 @@
 import Link from "next/link";
-import { prisma } from "@/lib/prisma";
+import { query } from "@/lib/db";
 import { PageHeader, Badge, STATUS_LABELS, STATUS_STYLES, formatDate } from "@/components/admin/ui";
 
 export const dynamic = "force-dynamic";
 
+type UserObj = { id: string; name: string; email: string; role: string };
+type TicketRow = {
+  id: string;
+  number: number;
+  title: string;
+  status: string;
+  createdAt: Date;
+  user: UserObj;
+};
+type InventoryRow = { id: string; quantity: number; minThreshold: number };
+type ConversationRow = {
+  id: string;
+  updatedAt: Date;
+  user: UserObj;
+  _count: { messages: number };
+};
+
 export default async function AdminDashboard() {
   const [pendingTickets, totalItems, inventoryItems, activeLoans, recentTickets, recentConversations] =
     await Promise.all([
-      prisma.ticket.count({ where: { status: "pendiente" } }),
-      prisma.inventoryItem.count(),
-      prisma.inventoryItem.findMany({ orderBy: { name: "asc" } }),
-      prisma.loan.count({ where: { status: "prestado" } }),
-      prisma.ticket.findMany({
-        take: 6,
-        orderBy: { createdAt: "desc" },
-        include: { user: true },
-      }),
-      prisma.conversation.findMany({
-        take: 6,
-        orderBy: { updatedAt: "desc" },
-        include: { user: true, _count: { select: { messages: true } } },
-      }),
+      query<{ count: number }>(
+        `SELECT COUNT(*)::int AS count FROM "Ticket" WHERE status = 'pendiente'`
+      ).then((r) => r[0].count),
+      query<{ count: number }>(`SELECT COUNT(*)::int AS count FROM "InventoryItem"`).then(
+        (r) => r[0].count
+      ),
+      query<InventoryRow>(`SELECT * FROM "InventoryItem" ORDER BY name ASC`),
+      query<{ count: number }>(
+        `SELECT COUNT(*)::int AS count FROM "Loan" WHERE status = 'prestado'`
+      ).then((r) => r[0].count),
+      query<TicketRow>(
+        `SELECT t.*, json_build_object('id', u.id, 'name', u.name, 'email', u.email, 'role', u.role) AS "user"
+         FROM "Ticket" t
+         JOIN "User" u ON u.id = t."userId"
+         ORDER BY t."createdAt" DESC LIMIT 6`
+      ),
+      query<ConversationRow>(
+        `SELECT c.*,
+           json_build_object('id', u.id, 'name', u.name, 'email', u.email, 'role', u.role) AS "user",
+           json_build_object('messages', (SELECT COUNT(*)::int FROM "Message" m WHERE m."conversationId" = c.id)) AS "_count"
+         FROM "Conversation" c
+         JOIN "User" u ON u.id = c."userId"
+         ORDER BY c."updatedAt" DESC LIMIT 6`
+      ),
     ]);
 
   const outOfStock = inventoryItems.filter((i) => i.quantity <= 0);

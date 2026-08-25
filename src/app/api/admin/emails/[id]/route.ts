@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { query } from "@/lib/db";
 import { requireStaff, unauthorized } from "@/lib/admin";
 
 export async function DELETE(
@@ -7,6 +7,6 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   if (!(await requireStaff())) return unauthorized();
-  await prisma.allowedEmail.delete({ where: { id: params.id } });
+  await query(`DELETE FROM "AllowedEmail" WHERE id = $1`, [params.id]);
   return NextResponse.json({ ok: true });
 }

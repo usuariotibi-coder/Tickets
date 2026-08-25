@@ -1,18 +1,32 @@
 import Link from "next/link";
-import { prisma } from "@/lib/prisma";
+import { query } from "@/lib/db";
 import { PageHeader, formatDate } from "@/components/admin/ui";
 
 export const dynamic = "force-dynamic";
 
+type UserObj = { id: string; name: string; email: string; role: string };
+type TicketObj = { id: string; number: number; title: string; status: string };
+type ConversationRow = {
+  id: string;
+  updatedAt: Date;
+  user: UserObj;
+  _count: { messages: number };
+  tickets: TicketObj[];
+};
+
 export default async function ConversationsPage() {
-  const conversations = await prisma.conversation.findMany({
-    orderBy: { updatedAt: "desc" },
-    include: {
-      user: true,
-      _count: { select: { messages: true } },
-      tickets: { select: { id: true, number: true, title: true, status: true } },
-    },
-  });
+  const conversations = await query<ConversationRow>(
+    `SELECT c.*,
+       json_build_object('id', u.id, 'name', u.name, 'email', u.email, 'role', u.role) AS "user",
+       json_build_object('messages', (SELECT COUNT(*)::int FROM "Message" m WHERE m."conversationId" = c.id)) AS "_count",
+       COALESCE((
+         SELECT json_agg(json_build_object('id', t.id, 'number', t.number, 'title', t.title, 'status', t.status))
+         FROM "Ticket" t WHERE t."conversationId" = c.id
+       ), '[]') AS tickets
+     FROM "Conversation" c
+     JOIN "User" u ON u.id = c."userId"
+     ORDER BY c."updatedAt" DESC`
+  );
 
   return (
     <div>

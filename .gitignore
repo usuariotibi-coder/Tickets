@@ -2,6 +2,14 @@ node_modules
 .next
 out
 dist
+.open-next
+.dev.vars
+cloudflare-env.d.ts
+.cf-token.ps1
+wrangler-dev.log
+wrangler.jsonc
+.wrangler
+.wrangler-pid.txt
 .env*.local
 .env
 .env.local

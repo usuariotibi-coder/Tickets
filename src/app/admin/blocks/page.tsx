@@ -1,15 +1,37 @@
-import { prisma } from "@/lib/prisma";
+import { query } from "@/lib/db";
 import { PageHeader } from "@/components/admin/ui";
 import { BlocksManager } from "@/components/admin/blocks-manager";
 
 export const dynamic = "force-dynamic";
 
+type BlockLogRow = {
+  id: string;
+  reason: string;
+  conversation: unknown;
+  blockedAt: Date;
+};
+
+type UserRow = {
+  id: string;
+  name: string;
+  email: string;
+  blockedAt: Date | null;
+  blockedReason: string | null;
+  offTopicCount: number;
+  blockLogs: BlockLogRow[];
+};
+
 export default async function BlocksPage() {
-  const users = await prisma.user.findMany({
-    where: { isBlocked: true },
-    include: { blockLogs: { orderBy: { blockedAt: "desc" }, take: 1 } },
-    orderBy: { blockedAt: "desc" },
-  });
+  const users = await query<UserRow>(
+    `SELECT u.*,
+       COALESCE((
+         SELECT json_agg(json_build_object('id', bl.id, 'reason', bl.reason, 'conversation', bl.conversation, 'blockedAt', bl."blockedAt") ORDER BY bl."blockedAt" DESC)
+         FROM "BlockLog" bl WHERE bl."userId" = u.id
+       ), '[]') AS "blockLogs"
+     FROM "User" u
+     WHERE u."isBlocked" = true
+     ORDER BY u."blockedAt" DESC`
+  );
 
   const data = users.map((u) => ({
     id: u.id,

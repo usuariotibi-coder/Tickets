@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { query, queryOne } from "@/lib/db";
 import {
   runAssistant,
   streamFinalResponse,
@@ -14,6 +14,31 @@ export const runtime = "nodejs";
 
 const BLOCK_THRESHOLD = 3;
 const NEUTRAL_ERROR = "Ocurrió un error al procesar tu mensaje. Inténtalo de nuevo.";
+
+type UserRow = {
+  id: string;
+  offTopicCount: number;
+  isBlocked: boolean;
+  blockedReason: string | null;
+  blockedAt: Date | null;
+};
+
+type ConversationRow = {
+  id: string;
+  userId: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+type MessageRow = {
+  id: string;
+  conversationId: string;
+  role: string;
+  content: string;
+  toolCalls: unknown;
+  userId: string | null;
+  createdAt: Date;
+};
 
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
@@ -34,26 +59,33 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Mensaje vacío" }, { status: 400 });
   }
 
-  const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
+  const dbUser = await queryOne<UserRow>('SELECT * FROM "User" WHERE id = $1', [user.id]);
 
   let conversationId = body?.conversationId as string | undefined;
   let conversation = conversationId
-    ? await prisma.conversation.findFirst({ where: { id: conversationId, userId: user.id } })
+    ? await queryOne<ConversationRow>(
+        'SELECT * FROM "Conversation" WHERE id = $1 AND "userId" = $2',
+        [conversationId, user.id]
+      )
     : null;
   if (!conversation) {
-    conversation = await prisma.conversation.create({ data: { userId: user.id } });
+    const rows = await query<ConversationRow>(
+      `INSERT INTO "Conversation" ("userId") VALUES ($1) RETURNING *`,
+      [user.id]
+    );
+    conversation = rows[0];
     conversationId = conversation.id;
   }
 
-  await prisma.message.create({
-    data: { conversationId: conversation!.id, role: "user", content: message },
-  });
+  await query(
+    `INSERT INTO "Message" ("conversationId", role, content) VALUES ($1, $2, $3)`,
+    [conversation!.id, "user", message]
+  );
 
-  const historyRows = await prisma.message.findMany({
-    where: { conversationId: conversation!.id },
-    orderBy: { createdAt: "asc" },
-    take: 80,
-  });
+  const historyRows = await query<MessageRow>(
+    `SELECT * FROM "Message" WHERE "conversationId" = $1 ORDER BY "createdAt" ASC LIMIT 80`,
+    [conversation!.id]
+  );
   const history = historyRows
     .filter((m) => m.role === "user" || m.role === "assistant")
     .map((m) => ({ role: m.role as "user" | "assistant", content: m.content }));
@@ -77,25 +109,31 @@ export async function POST(req: Request) {
 
         if (offTopic) {
           const nextCount = (dbUser?.offTopicCount ?? 0) + 1;
-          await prisma.user.update({ where: { id: user.id }, data: { offTopicCount: nextCount } });
+          await query(`UPDATE "User" SET "offTopicCount" = $2 WHERE id = $1`, [
+            user.id,
+            nextCount,
+          ]);
 
           if (nextCount >= BLOCK_THRESHOLD) {
             const reason = "Mensajes repetidos fuera del tema de la organización";
-            await prisma.user.update({
-              where: { id: user.id },
-              data: { isBlocked: true, blockedReason: reason, blockedAt: new Date() },
-            });
-            await prisma.blockLog.create({
-              data: {
-                userId: user.id,
+            await query(
+              `UPDATE "User" SET "isBlocked" = true, "blockedReason" = $2, "blockedAt" = $3 WHERE id = $1`,
+              [user.id, reason, new Date()]
+            );
+            await query(
+              `INSERT INTO "BlockLog" ("userId", reason, conversation) VALUES ($1, $2, $3::jsonb)`,
+              [
+                user.id,
                 reason,
-                conversation: historyRows.map((m) => ({
-                  role: m.role,
-                  content: m.content,
-                  createdAt: m.createdAt,
-                })),
-              },
-            });
+                JSON.stringify(
+                  historyRows.map((m) => ({
+                    role: m.role,
+                    content: m.content,
+                    createdAt: m.createdAt,
+                  }))
+                ),
+              ]
+            );
             await notifyUserBlocked({
               userName: user.name,
               userEmail: user.email,
@@ -127,13 +165,14 @@ export async function POST(req: Request) {
           send({ delta: full });
         }
 
-        await prisma.message.create({
-          data: { conversationId: conversation!.id, role: "assistant", content: full },
-        });
-        await prisma.conversation.update({
-          where: { id: conversation!.id },
-          data: { updatedAt: new Date() },
-        });
+        await query(
+          `INSERT INTO "Message" ("conversationId", role, content) VALUES ($1, $2, $3)`,
+          [conversation!.id, "assistant", full]
+        );
+        await query(`UPDATE "Conversation" SET "updatedAt" = $2 WHERE id = $1`, [
+          conversation!.id,
+          new Date(),
+        ]);
 
         finish({ done: true, conversationId: conversation!.id });
       } catch (e) {

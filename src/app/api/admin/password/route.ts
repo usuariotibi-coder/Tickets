@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { prisma } from "@/lib/prisma";
+import { query, queryOne } from "@/lib/db";
 import { requireStaff, unauthorized } from "@/lib/admin";
+
+type UserRow = { id: string; password: string | null };
 
 export async function POST(req: Request) {
   const session = await requireStaff();
@@ -18,7 +20,9 @@ export async function POST(req: Request) {
     );
   }
 
-  const user = await prisma.user.findUnique({ where: { id: session.user.id } });
+  const user = await queryOne<UserRow>('SELECT * FROM "User" WHERE id = $1', [
+    session.user.id,
+  ]);
   if (!user?.password) {
     return NextResponse.json({ error: "Este usuario no tiene contraseña." }, { status: 400 });
   }
@@ -29,10 +33,7 @@ export async function POST(req: Request) {
   }
 
   const hash = await bcrypt.hash(newPassword, 10);
-  await prisma.user.update({
-    where: { id: user.id },
-    data: { password: hash },
-  });
+  await query(`UPDATE "User" SET password = $2 WHERE id = $1`, [user.id, hash]);
 
   return NextResponse.json({ ok: true });
 }

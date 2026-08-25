@@ -1,8 +1,20 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { query } from "@/lib/db";
 import { requireStaff, unauthorized } from "@/lib/admin";
 
 const validCategories = ["papel", "pilas", "periferico", "otro"];
+
+type InventoryRow = {
+  id: string;
+  name: string;
+  category: string;
+  quantity: number;
+  minThreshold: number;
+  unit: string;
+  notes: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
 
 export async function POST(req: Request) {
   if (!(await requireStaff())) return unauthorized();
@@ -18,8 +30,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });
   }
 
-  const item = await prisma.inventoryItem.create({
-    data: { name, category, quantity, minThreshold, unit, notes },
-  });
+  const rows = await query<InventoryRow>(
+    `INSERT INTO "InventoryItem" (name, category, quantity, "minThreshold", unit, notes)
+     VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+    [name, category, quantity, minThreshold, unit, notes]
+  );
+  const item = rows[0];
   return NextResponse.json({ item }, { status: 201 });
 }

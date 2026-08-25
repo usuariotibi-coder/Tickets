@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { query } from "@/lib/db";
 import { requireStaff, unauthorized } from "@/lib/admin";
 
 const validStatuses = ["pendiente", "aprobada", "rechazada", "resuelta"];
+
+type TicketRow = {
+  id: string;
+  status: string;
+};
 
 export async function PATCH(
   req: Request,
@@ -15,11 +20,11 @@ export async function PATCH(
     return NextResponse.json({ error: "Estado inválido" }, { status: 400 });
   }
 
-  const ticket = await prisma.ticket.update({
-    where: { id: params.id },
-    data: { status },
-  });
-  return NextResponse.json({ ticket });
+  const rows = await query<TicketRow>(
+    `UPDATE "Ticket" SET status = $2 WHERE id = $1 RETURNING *`,
+    [params.id, status]
+  );
+  return NextResponse.json({ ticket: rows[0] });
 }
 
 export async function DELETE(
@@ -27,6 +32,6 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   if (!(await requireStaff())) return unauthorized();
-  await prisma.ticket.delete({ where: { id: params.id } });
+  await query(`DELETE FROM "Ticket" WHERE id = $1`, [params.id]);
   return NextResponse.json({ ok: true });
 }

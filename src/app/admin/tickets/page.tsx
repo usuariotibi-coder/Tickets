@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { prisma } from "@/lib/prisma";
+import { query } from "@/lib/db";
 import {
   PageHeader,
   Badge,
@@ -11,6 +11,17 @@ import {
 
 export const dynamic = "force-dynamic";
 
+type UserObj = { id: string; name: string; email: string; role: string };
+type TicketRow = {
+  id: string;
+  number: number;
+  title: string;
+  category: string;
+  status: string;
+  createdAt: Date;
+  user: UserObj;
+};
+
 export default async function TicketsPage({
   searchParams,
 }: {
@@ -18,11 +29,21 @@ export default async function TicketsPage({
 }) {
   const status = searchParams.status;
 
-  const tickets = await prisma.ticket.findMany({
-    where: status ? { status } : undefined,
-    orderBy: { createdAt: "desc" },
-    include: { user: true },
-  });
+  const tickets = status
+    ? await query<TicketRow>(
+        `SELECT t.*, json_build_object('id', u.id, 'name', u.name, 'email', u.email, 'role', u.role) AS "user"
+         FROM "Ticket" t
+         JOIN "User" u ON u.id = t."userId"
+         WHERE t.status = $1
+         ORDER BY t."createdAt" DESC`,
+        [status]
+      )
+    : await query<TicketRow>(
+        `SELECT t.*, json_build_object('id', u.id, 'name', u.name, 'email', u.email, 'role', u.role) AS "user"
+         FROM "Ticket" t
+         JOIN "User" u ON u.id = t."userId"
+         ORDER BY t."createdAt" DESC`
+      );
 
   const statuses = ["pendiente", "aprobada", "rechazada", "resuelta"];
 

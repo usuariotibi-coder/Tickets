@@ -1,11 +1,20 @@
-import { prisma } from "@/lib/prisma";
+import { query } from "@/lib/db";
 import { PageHeader } from "@/components/admin/ui";
 import { EmailsManager } from "@/components/admin/emails-manager";
 
 export const dynamic = "force-dynamic";
 
+type AllowedEmailRow = {
+  id: string;
+  email: string;
+  note: string | null;
+  createdAt: Date;
+};
+
 export default async function EmailsPage() {
-  const emails = await prisma.allowedEmail.findMany({ orderBy: { createdAt: "desc" } });
+  const emails = await query<AllowedEmailRow>(
+    `SELECT * FROM "AllowedEmail" ORDER BY "createdAt" DESC`
+  );
   return (
     <div>
       <PageHeader

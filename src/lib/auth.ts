@@ -1,7 +1,23 @@
 import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
-import { prisma } from "@/lib/prisma";
+import { query, queryOne } from "@/lib/db";
+
+type UserRow = {
+  id: string;
+  name: string;
+  email: string;
+  password: string | null;
+  role: string;
+  department: string | null;
+};
+
+type AllowedEmailRow = {
+  id: string;
+  email: string;
+  note: string | null;
+  createdAt: Date;
+};
 
 export const authOptions: NextAuthOptions = {
   session: { strategy: "jwt" },
@@ -19,7 +35,10 @@ export const authOptions: NextAuthOptions = {
 
         // Acceso de staff: correo + contraseña
         if (credentials.password) {
-          const user = await prisma.user.findUnique({ where: { email } });
+          const user = await queryOne<UserRow>(
+            'SELECT * FROM "User" WHERE email = $1',
+            [email]
+          );
           if (!user?.password) return null;
           const valid = await bcrypt.compare(credentials.password, user.password);
           if (!valid) return null;
@@ -32,22 +51,26 @@ export const authOptions: NextAuthOptions = {
         }
 
         // Acceso de usuarios: solo correo, debe estar en la lista blanca
-        const allowed = await prisma.allowedEmail.findUnique({ where: { email } });
+        const allowed = await queryOne<AllowedEmailRow>(
+          'SELECT * FROM "AllowedEmail" WHERE email = $1',
+          [email]
+        );
         if (!allowed) return null;
 
-        const existing = await prisma.user.findUnique({ where: { email } });
+        const existing = await queryOne<UserRow>(
+          'SELECT * FROM "User" WHERE email = $1',
+          [email]
+        );
         if (existing && existing.role === "staff") return null; // staff usa contraseña
 
-        const user =
-          existing ??
-          (await prisma.user.create({
-            data: {
-              email,
-              name: email.split("@")[0],
-              role: "user",
-              password: null,
-            },
-          }));
+        let user = existing;
+        if (!user) {
+          const rows = await query<UserRow>(
+            `INSERT INTO "User" (email, name, role, password) VALUES ($1, $2, 'user', NULL) RETURNING *`,
+            [email, email.split("@")[0]]
+          );
+          user = rows[0];
+        }
 
         return {
           id: user.id,

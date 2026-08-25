@@ -1,7 +1,8 @@
-import { PrismaClient } from "@prisma/client";
+import "dotenv/config";
+import { Pool } from "pg";
 import bcrypt from "bcryptjs";
 
-const prisma = new PrismaClient();
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 async function main() {
   const adminEmail = process.env.ADMIN_EMAIL || "admin@ti.local";
@@ -9,24 +10,22 @@ async function main() {
   const adminName = process.env.ADMIN_NAME || "Administrador TI";
 
   const password = await bcrypt.hash(adminPassword, 10);
-  await prisma.user.upsert({
-    where: { email: adminEmail },
-    update: {},
-    create: {
-      email: adminEmail,
-      name: adminName,
-      password,
-      role: "staff",
-      department: "TI",
-    },
-  });
+  await pool.query(
+    `INSERT INTO "User" (email, name, password, role, department)
+     VALUES ($1, $2, $3, 'staff', 'TI')
+     ON CONFLICT (email) DO NOTHING`,
+    [adminEmail, adminName, password]
+  );
 
   const allowedEmails = [
     { email: "test@ti.local", note: "Usuario de prueba (ingreso sin contraseña)" },
   ];
   for (const ae of allowedEmails) {
-    const existing = await prisma.allowedEmail.findUnique({ where: { email: ae.email } });
-    if (!existing) await prisma.allowedEmail.create({ data: ae });
+    await pool.query(
+      `INSERT INTO "AllowedEmail" (email, note) VALUES ($1, $2)
+       ON CONFLICT (email) DO NOTHING`,
+      [ae.email, ae.note]
+    );
   }
 
   const inventory = [
@@ -38,8 +37,12 @@ async function main() {
     { name: "Audífonos", category: "periferico", quantity: 10, minThreshold: 3, unit: "unidad" },
   ];
   for (const item of inventory) {
-    const existing = await prisma.inventoryItem.findFirst({ where: { name: item.name } });
-    if (!existing) await prisma.inventoryItem.create({ data: item });
+    await pool.query(
+      `INSERT INTO "InventoryItem" (name, category, quantity, "minThreshold", unit)
+       SELECT $1, $2, $3, $4, $5
+       WHERE NOT EXISTS (SELECT 1 FROM "InventoryItem" WHERE name = $1)`,
+      [item.name, item.category, item.quantity, item.minThreshold, item.unit]
+    );
   }
 
   const procedures = [
@@ -123,12 +126,12 @@ async function main() {
     },
   ];
   for (const p of procedures) {
-    const existing = await prisma.procedure.findFirst({ where: { title: p.title } });
-    if (existing) {
-      await prisma.procedure.update({ where: { id: existing.id }, data: p });
-    } else {
-      await prisma.procedure.create({ data: p });
-    }
+    await pool.query(
+      `INSERT INTO "Procedure" (title, content, category)
+       SELECT $1, $2, $3
+       WHERE NOT EXISTS (SELECT 1 FROM "Procedure" WHERE title = $1)`,
+      [p.title, p.content, p.category]
+    );
   }
 
   console.log("Seed completado.");
@@ -139,4 +142,4 @@ main()
     console.error(e);
     process.exit(1);
   })
-  .finally(() => prisma.$disconnect());
+  .finally(() => pool.end());

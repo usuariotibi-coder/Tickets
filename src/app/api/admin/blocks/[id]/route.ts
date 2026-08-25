@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { query, queryOne, runTransaction } from "@/lib/db";
 import { requireStaff, unauthorized } from "@/lib/admin";
+
+type BlockLogRow = { id: string; userId: string };
 
 export async function PATCH(
   _req: Request,
@@ -8,21 +10,23 @@ export async function PATCH(
 ) {
   if (!(await requireStaff())) return unauthorized();
 
-  const blockLog = await prisma.blockLog.findUnique({ where: { id: params.id } });
+  const blockLog = await queryOne<BlockLogRow>('SELECT * FROM "BlockLog" WHERE id = $1', [
+    params.id,
+  ]);
   if (!blockLog) {
     return NextResponse.json({ error: "No encontrado" }, { status: 404 });
   }
 
-  await prisma.$transaction([
-    prisma.user.update({
-      where: { id: blockLog.userId },
-      data: { isBlocked: false, blockedReason: null, blockedAt: null },
-    }),
-    prisma.blockLog.update({
-      where: { id: blockLog.id },
-      data: { unblockedAt: new Date() },
-    }),
-  ]);
+  await runTransaction(async (q) => {
+    await q(
+      `UPDATE "User" SET "isBlocked" = false, "blockedReason" = NULL, "blockedAt" = NULL WHERE id = $1`,
+      [blockLog.userId]
+    );
+    await q(`UPDATE "BlockLog" SET "unblockedAt" = $2 WHERE id = $1`, [
+      blockLog.id,
+      new Date(),
+    ]);
+  });
 
   return NextResponse.json({ ok: true });
 }
