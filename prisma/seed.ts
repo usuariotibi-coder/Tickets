@@ -39,8 +39,8 @@ async function main() {
   ];
   for (const item of inventory) {
     await pool.query(
-      `INSERT INTO "InventoryItem" (id, name, category, quantity, "minThreshold", unit)
-       SELECT $1, $2, $3, $4, $5, $6
+      `INSERT INTO "InventoryItem" (id, name, category, quantity, "minThreshold", unit, "createdAt", "updatedAt")
+       SELECT $1, $2, $3, $4, $5, $6, now(), now()
        WHERE NOT EXISTS (SELECT 1 FROM "InventoryItem" WHERE name = $2)`,
       [randomUUID(), item.name, item.category, item.quantity, item.minThreshold, item.unit]
     );
@@ -128,8 +128,8 @@ async function main() {
   ];
   for (const p of procedures) {
     await pool.query(
-      `INSERT INTO "Procedure" (id, title, content, category)
-       SELECT $1, $2, $3, $4
+      `INSERT INTO "Procedure" (id, title, content, category, "createdAt", "updatedAt")
+       SELECT $1, $2, $3, $4, now(), now()
        WHERE NOT EXISTS (SELECT 1 FROM "Procedure" WHERE title = $2)`,
       [randomUUID(), p.title, p.content, p.category]
     );
