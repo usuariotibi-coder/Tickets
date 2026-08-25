@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { signOut, useSession } from "next-auth/react";
+import Link from "next/link";
 
 type Msg = {
   role: "user" | "assistant";
@@ -145,6 +146,14 @@ export default function Chat() {
             >
               Panel de administración
             </a>
+          )}
+{!isStaff && (
+            <Link
+              href="/mis-solicitudes"
+              className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+            >
+              Mis solicitudes
+            </Link>
           )}
           <button
             onClick={newConversation}
