@@ -18,8 +18,16 @@ async function main() {
     [randomUUID(), adminEmail, adminName, password]
   );
 
+  const testUserEmail = "test@ti.local";
+  await pool.query(
+    `INSERT INTO "User" (id, email, name, password, role, department)
+     VALUES ($1, $2, $3, NULL, 'user', NULL)
+     ON CONFLICT (email) DO NOTHING`,
+    [randomUUID(), testUserEmail, "Usuario de Prueba"]
+  );
+
   const allowedEmails = [
-    { email: "test@ti.local", note: "Usuario de prueba (ingreso sin contraseña)" },
+    { email: testUserEmail, note: "Usuario de prueba (ingreso sin contraseña)" },
   ];
   for (const ae of allowedEmails) {
     await pool.query(
