@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { randomUUID } from "node:crypto";
 import { Pool } from "pg";
 import bcrypt from "bcryptjs";
 
@@ -11,10 +12,10 @@ async function main() {
 
   const password = await bcrypt.hash(adminPassword, 10);
   await pool.query(
-    `INSERT INTO "User" (email, name, password, role, department)
-     VALUES ($1, $2, $3, 'staff', 'TI')
+    `INSERT INTO "User" (id, email, name, password, role, department)
+     VALUES ($1, $2, $3, $4, 'staff', 'TI')
      ON CONFLICT (email) DO NOTHING`,
-    [adminEmail, adminName, password]
+    [randomUUID(), adminEmail, adminName, password]
   );
 
   const allowedEmails = [
@@ -22,9 +23,9 @@ async function main() {
   ];
   for (const ae of allowedEmails) {
     await pool.query(
-      `INSERT INTO "AllowedEmail" (email, note) VALUES ($1, $2)
+      `INSERT INTO "AllowedEmail" (id, email, note) VALUES ($1, $2, $3)
        ON CONFLICT (email) DO NOTHING`,
-      [ae.email, ae.note]
+      [randomUUID(), ae.email, ae.note]
     );
   }
 
@@ -38,10 +39,10 @@ async function main() {
   ];
   for (const item of inventory) {
     await pool.query(
-      `INSERT INTO "InventoryItem" (name, category, quantity, "minThreshold", unit)
-       SELECT $1, $2, $3, $4, $5
-       WHERE NOT EXISTS (SELECT 1 FROM "InventoryItem" WHERE name = $1)`,
-      [item.name, item.category, item.quantity, item.minThreshold, item.unit]
+      `INSERT INTO "InventoryItem" (id, name, category, quantity, "minThreshold", unit)
+       SELECT $1, $2, $3, $4, $5, $6
+       WHERE NOT EXISTS (SELECT 1 FROM "InventoryItem" WHERE name = $2)`,
+      [randomUUID(), item.name, item.category, item.quantity, item.minThreshold, item.unit]
     );
   }
 
@@ -127,10 +128,10 @@ async function main() {
   ];
   for (const p of procedures) {
     await pool.query(
-      `INSERT INTO "Procedure" (title, content, category)
-       SELECT $1, $2, $3
-       WHERE NOT EXISTS (SELECT 1 FROM "Procedure" WHERE title = $1)`,
-      [p.title, p.content, p.category]
+      `INSERT INTO "Procedure" (id, title, content, category)
+       SELECT $1, $2, $3, $4
+       WHERE NOT EXISTS (SELECT 1 FROM "Procedure" WHERE title = $2)`,
+      [randomUUID(), p.title, p.content, p.category]
     );
   }
 
