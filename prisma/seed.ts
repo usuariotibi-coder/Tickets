@@ -68,7 +68,7 @@ async function main() {
       category: "requisiciones",
     },
     {
-      title: "Reporte de una computadora con falla",
+      title: "Reportar una computadora con fallas",
       content:
         "Antes de reportar una falla, describe qué estabas haciendo y qué pasó.\n1. Indica qué pasaba: ¿problema con correo, Office, NAS, impresora, Encompix, internet o acceso?\n2. Sigue la guía del asistente para verificar puntos rápidos.\n3. Si el problema persiste después de la verificación, se levanta el ticket.\n4. Indica la ubicación del equipo si aplica.",
       category: "soporte",
@@ -144,6 +144,12 @@ async function main() {
       "Periféricos (teclado, mouse, audífonos): NO se devuelven; se entregan y están sujetos a disponibilidad en inventario.\n1. Pide en el chat el periférico y la cantidad.\n2. El asistente verifica disponibilidad en inventario.\n3. Si hay stock, se registra la requisición a tu nombre y TI prepara el material.\n4. TI te avisa (por chat o correo) cuando el material esté listo para entregarse.",
       "requisiciones",
     ]
+  );
+
+  await pool.query(
+    `UPDATE "Procedure" SET title = $2, "updatedAt" = now()
+     WHERE title = $1`,
+    ["Reporte de una computadora con falla", "Reportar una computadora con fallas"]
   );
 
   for (const p of procedures) {
