@@ -11,7 +11,7 @@ type Msg = {
 };
 
 const SUGGESTIONS = [
-  "Quiero pedir prestado papel y pilas",
+  "Quiero hacer una requisición de papel y pilas",
   "¿Cómo solicito una computadora con falla?",
   "Necesito que revisen mi equipo",
   "¿Cómo va mi solicitud?",

@@ -64,7 +64,7 @@ const STATUS_CONFIG: Record<
 
 const CATEGORY_LABELS: Record<string, string> = {
   solicitud: "Solicitud",
-  prestamo: "Préstamo",
+  prestamo: "Requisición",
   soporte: "Soporte",
   reposicion: "Reposición",
 };
@@ -82,8 +82,8 @@ const PRIORITY_STYLES: Record<string, string> = {
 };
 
 const LOAN_LABELS: Record<string, string> = {
-  prestado: "Prestado",
-  devuelto: "Devuelto",
+  prestado: "Solicitada",
+  devuelto: "Entregada",
 };
 
 const LOAN_STYLES: Record<string, string> = {
@@ -202,7 +202,7 @@ function TicketCard({ ticket }: { ticket: Ticket }) {
         />
         {ticket.loan && (
           <Chip
-            label={`Préstamo: ${LOAN_LABELS[ticket.loan.status] || ticket.loan.status}`}
+            label={`Requisición: ${LOAN_LABELS[ticket.loan.status] || ticket.loan.status}`}
             className={LOAN_STYLES[ticket.loan.status]}
           />
         )}

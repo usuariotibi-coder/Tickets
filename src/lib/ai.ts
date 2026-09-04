@@ -66,7 +66,7 @@ export async function classifyOffTopic(text: string): Promise<boolean> {
         {
           role: "system",
           content:
-            "Eres un moderador del asistente del departamento de TI. Clasifica si el mensaje del usuario está DENTRO del tema de trabajo (soporte técnico, solicitudes de material de oficina, préstamos, reportes de fallas, procedimientos, correo, red, cuentas, inventario) o FUERA del tema (pedidos de cosas que TI no maneja: globos, dinosaurios, café, comida, juguetes, chistes sin relación, etc.). Responde SOLO con JSON válido: {\"off_topic\": true} o {\"off_topic\": false}.",
+            "Eres un moderador del asistente del departamento de TI. Clasifica si el mensaje del usuario está DENTRO del tema de trabajo (soporte técnico, solicitudes de material de oficina, requisiciones de material, reportes de fallas, procedimientos, correo, red, cuentas, inventario) o FUERA del tema (pedidos de cosas que TI no maneja: globos, dinosaurios, café, comida, juguetes, chistes sin relación, etc.). Responde SOLO con JSON válido: {\"off_topic\": true} o {\"off_topic\": false}.",
         },
         { role: "user", content: text },
       ],
@@ -139,7 +139,7 @@ const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
             type: "string",
             enum: [...categories],
             description:
-              "solicitud = pedido general; prestamo = pedir algo prestado (papel, pilas, periféricos) con devolución; soporte = falla o soporte técnico; reposicion = reponer material agotado del stock",
+              "solicitud = pedido general; prestamo = requisición de material (papel, pilas, periféricos); soporte = falla o soporte técnico; reposicion = reponer material agotado del stock",
           },
           priority: {
             type: "string",
@@ -148,7 +148,7 @@ const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
           },
           requestedItems: {
             type: "array",
-            description: "Artículos solicitados (obligatorio para categoría prestamo/reposicion)",
+            description: "Artículos solicitados (obligatorio para requisiciones de material: prestamo/reposicion)",
             items: {
               type: "object",
               properties: {
@@ -177,7 +177,7 @@ const tools: OpenAI.Chat.Completions.ChatCompletionTool[] = [
     function: {
       name: "get_active_loans",
       description:
-        "Lista los préstamos activos (no devueltos). SOLO para personal del departamento de TI.",
+        "Lista las requisiciones de material activas (no entregadas). SOLO para personal del departamento de TI.",
       parameters: { type: "object", properties: {} },
     },
   },
@@ -236,7 +236,7 @@ async function executeTool(
       );
       const ticket = ticketRows[0];
 
-      if (category === "prestamo") {
+      if (requestedItems.length > 0) {
         await query(
           `INSERT INTO "Loan" ("ticketId", "userId", "borrowerName", items)
            VALUES ($1, $2, $3, $4::jsonb)`,
@@ -294,7 +294,7 @@ async function executeTool(
          WHERE l.status = 'prestado'
          ORDER BY l."borrowedAt" DESC`
       );
-      if (loans.length === 0) return "No hay préstamos activos.";
+      if (loans.length === 0) return "No hay requisiciones de material activas.";
       return loans
         .map(
           (l) =>
@@ -339,7 +339,7 @@ REGLAS GENERALES:
     return `${base}
 
 ERES PERSONAL DEL DEPARTAMENTO DE TI (rol staff). Tienes acceso total.
-- Puedes usar get_active_loans y ver inventario completo con cantidades exactas.
+- Puedes consultar las requisiciones de material activas y ver el inventario completo con cantidades exactas.
 - Ayudas a redactar correos electrónicos profesionales, resúmenes de tickets y mensajes internos cuando te los pidan.
 - Puedes consultar y explicar detalles de infraestructura y procedimientos internos.`;
   }
