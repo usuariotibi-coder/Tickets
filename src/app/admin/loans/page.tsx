@@ -31,11 +31,11 @@ export default async function LoansPage() {
 
   return (
     <div>
-      <PageHeader title="Préstamos" subtitle="Material prestado y pendiente de devolución" />
+<PageHeader title="Requisiciones" subtitle="Requisiciones de material y su estado de entrega" />
       <div className="p-6">
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
           {loans.length === 0 ? (
-            <p className="p-6 text-sm text-slate-500">No hay préstamos registrados.</p>
+            <p className="p-6 text-sm text-slate-500">No hay requisiciones registradas.</p>
           ) : (
             loans.map((l) => {
               const items = (l.items as LoanItem[]) || [];
@@ -53,8 +53,8 @@ export default async function LoansPage() {
                       {items.map((i) => `${i.quantity}× ${i.name}`).join(", ")}
                     </p>
                     <p className="mt-0.5 text-xs text-slate-400">
-                      Prestado: {formatDate(l.borrowedAt)}
-                      {l.returnedAt ? ` · Devuelto: ${formatDate(l.returnedAt)}` : ""} ·{" "}
+Solicitada: {formatDate(l.borrowedAt)}
+                      {l.returnedAt ? ` · Entregada: ${formatDate(l.returnedAt)}` : ""} ·{" "}
                       <a
                         href={`/admin/tickets/${l.ticketId}`}
                         className="text-brand-600 hover:underline"
@@ -64,8 +64,8 @@ export default async function LoansPage() {
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Badge
-                      label={l.status === "prestado" ? "Prestado" : "Devuelto"}
+<Badge
+                      label={l.status === "prestado" ? "Solicitada" : "Entregada"}
                       className={l.status === "prestado" ? "bg-green-100 text-green-800" : "bg-slate-100 text-slate-700"}
                     />
                     <ReturnLoanButton id={l.id} alreadyReturned={l.status === "devuelto"} />

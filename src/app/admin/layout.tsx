@@ -9,7 +9,7 @@ const nav = [
   { href: "/admin", label: "Dashboard", icon: "📊" },
   { href: "/admin/tickets", label: "Solicitudes", icon: "🎫" },
   { href: "/admin/inventory", label: "Inventario", icon: "📦" },
-  { href: "/admin/loans", label: "Préstamos", icon: "🔄" },
+  { href: "/admin/loans", label: "Requisiciones", icon: "🔄" },
   { href: "/admin/conversations", label: "Conversaciones", icon: "💬" },
   { href: "/admin/users", label: "Usuarios", icon: "👥" },
   { href: "/admin/procedures", label: "Procedimientos", icon: "📄" },

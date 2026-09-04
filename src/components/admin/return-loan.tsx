@@ -11,10 +11,10 @@ export function ReturnLoanButton({ id, alreadyReturned }: { id: string; alreadyR
 
   async function markReturned() {
     const ok = await confirm({
-      title: "Marcar préstamo como devuelto",
-      message: "¿Seguro que quieres marcar este préstamo como devuelto?",
+      title: "Marcar requisición como entregada",
+      message: "¿Seguro que quieres marcar esta requisición como entregada?",
       variant: "success",
-      confirmLabel: "Marcar devuelto",
+      confirmLabel: "Marcar entregada",
     });
     if (!ok) return;
     setBusy(true);
@@ -31,7 +31,7 @@ export function ReturnLoanButton({ id, alreadyReturned }: { id: string; alreadyR
       disabled={busy}
       className="rounded-lg bg-green-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-700 disabled:opacity-50"
     >
-      {busy ? "..." : "Marcar devuelto"}
+      {busy ? "..." : "Marcar entregada"}
     </button>
   );
 }

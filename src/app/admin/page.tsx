@@ -56,7 +56,7 @@ export default async function AdminDashboard() {
   const cards = [
     { label: "Solicitudes pendientes", value: pendingTickets, icon: "🎫", href: "/admin/tickets", color: "bg-amber-50 text-amber-700" },
     { label: "Artículos en inventario", value: totalItems, icon: "📦", href: "/admin/inventory", color: "bg-brand-600/5 text-brand-700" },
-    { label: "Préstamos activos", value: activeLoans, icon: "🔄", href: "/admin/loans", color: "bg-green-50 text-green-700" },
+    { label: "Requisiciones activas", value: activeLoans, icon: "🔄", href: "/admin/loans", color: "bg-green-50 text-green-700" },
     { label: "Artículos sin stock", value: outOfStock.length + lowStock.length, icon: "⚠️", href: "/admin/inventory", color: "bg-red-50 text-red-700" },
   ];
 

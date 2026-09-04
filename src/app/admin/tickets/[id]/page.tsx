@@ -102,17 +102,17 @@ export default async function TicketDetailPage({ params }: { params: { id: strin
 
           {ticket.loan && (
             <div className="rounded-2xl border border-slate-200 bg-white p-5">
-              <h2 className="text-sm font-semibold text-slate-700">Préstamo</h2>
+              <h2 className="text-sm font-semibold text-slate-700">Requisición</h2>
               <div className="mt-2 space-y-1 text-sm text-slate-600">
                 <p>
                   Estado:{" "}
                   <Badge
-                    label={ticket.loan.status === "prestado" ? "Prestado" : "Devuelto"}
+                    label={ticket.loan.status === "prestado" ? "Solicitada" : "Entregada"}
                     className={ticket.loan.status === "prestado" ? "bg-green-100 text-green-800" : "bg-slate-100 text-slate-700"}
                   />
                 </p>
-                <p>Prestado el: {formatDate(ticket.loan.borrowedAt)}</p>
-                {ticket.loan.returnedAt && <p>Devuelto el: {formatDate(ticket.loan.returnedAt)}</p>}
+                <p>Solicitada el: {formatDate(ticket.loan.borrowedAt)}</p>
+                {ticket.loan.returnedAt && <p>Entregada el: {formatDate(ticket.loan.returnedAt)}</p>}
               </div>
             </div>
           )}

@@ -14,7 +14,7 @@ export const STATUS_STYLES: Record<string, string> = {
 
 export const CATEGORY_LABELS: Record<string, string> = {
   solicitud: "Solicitud",
-  prestamo: "Préstamo",
+  prestamo: "Requisición",
   soporte: "Soporte",
   reposicion: "Reposición",
 };
