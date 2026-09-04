@@ -62,10 +62,10 @@ async function main() {
       category: "solicitudes",
     },
     {
-      title: "Préstamo de equipo o periféricos",
+      title: "Entrega de equipo o periféricos",
       content:
-        "Periféricos (teclado, mouse, audífonos): SE devuelven y están sujetos a disponibilidad en inventario.\n1. Pide en el chat el periférico y la cantidad.\n2. El asistente verifica disponibilidad en inventario.\n3. Si hay stock, se registra el préstamo a tu nombre.\n4. Debes devolverlo en la fecha acordada. TI te avisa cuando venza.",
-      category: "prestamos",
+        "Periféricos (teclado, mouse, audífonos): NO se devuelven; se entregan y están sujetos a disponibilidad en inventario.\n1. Pide en el chat el periférico y la cantidad.\n2. El asistente verifica disponibilidad en inventario.\n3. Si hay stock, se registra la requisición a tu nombre y TI prepara el material.\n4. TI te avisa (por chat o correo) cuando el material esté listo para entregarse.",
+      category: "requisiciones",
     },
     {
       title: "Reporte de una computadora con falla",
@@ -134,6 +134,18 @@ async function main() {
       category: "soporte",
     },
   ];
+  await pool.query(
+    `UPDATE "Procedure"
+     SET title = $2, content = $3, category = $4, "updatedAt" = now()
+     WHERE title = $1 AND content ILIKE '%Debes devolverlo%'`,
+    [
+      "Préstamo de equipo o periféricos",
+      "Entrega de equipo o periféricos",
+      "Periféricos (teclado, mouse, audífonos): NO se devuelven; se entregan y están sujetos a disponibilidad en inventario.\n1. Pide en el chat el periférico y la cantidad.\n2. El asistente verifica disponibilidad en inventario.\n3. Si hay stock, se registra la requisición a tu nombre y TI prepara el material.\n4. TI te avisa (por chat o correo) cuando el material esté listo para entregarse.",
+      "requisiciones",
+    ]
+  );
+
   for (const p of procedures) {
     await pool.query(
       `INSERT INTO "Procedure" (id, title, content, category, "createdAt", "updatedAt")
