@@ -50,7 +50,7 @@ export default async function TicketsPage({
   return (
     <div>
       <PageHeader title="Solicitudes" subtitle="Todas las solicitudes registradas" />
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <div className="mb-4 flex flex-wrap gap-2">
           <Link
             href="/admin/tickets"

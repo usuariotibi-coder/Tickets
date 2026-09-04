@@ -21,7 +21,7 @@ export default async function InventoryPage() {
   return (
     <div>
       <PageHeader title="Inventario" subtitle="Papel, pilas y periféricos" />
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <InventoryTable items={items} />
       </div>
     </div>

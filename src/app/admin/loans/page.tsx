@@ -32,7 +32,7 @@ export default async function LoansPage() {
   return (
     <div>
 <PageHeader title="Requisiciones" subtitle="Requisiciones de material y su estado de entrega" />
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
           {loans.length === 0 ? (
             <p className="p-6 text-sm text-slate-500">No hay requisiciones registradas.</p>

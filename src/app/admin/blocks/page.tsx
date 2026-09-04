@@ -54,7 +54,7 @@ export default async function BlocksPage() {
         title="Usuarios bloqueados"
         subtitle="Bloqueados por interacciones fuera del tema. Revisa la conversación y desbloquéalos cuando lo decidas."
       />
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <BlocksManager users={data} />
       </div>
     </div>

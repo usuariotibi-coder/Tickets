@@ -22,7 +22,7 @@ export default async function EmailsPage() {
         title="Correos permitidos"
         subtitle="Usuarios que pueden ingresar al Centro de Asistencia TI con solo su correo"
       />
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <EmailsManager
           emails={emails.map((e) => ({ ...e, createdAt: e.createdAt.toISOString() }))}
         />

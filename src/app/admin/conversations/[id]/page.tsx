@@ -50,7 +50,7 @@ export default async function ConversationDetailPage({
         title={`Conversación de ${conversation.user.name}`}
         subtitle={conversation.user.email}
       />
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <div className="mb-4">
           <Link href="/admin/conversations" className="text-sm text-brand-600 hover:underline">
             ← Volver

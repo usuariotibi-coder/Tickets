@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { SignOutButton } from "@/components/signout-button";
+import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { query } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -52,48 +52,12 @@ export default async function AdminLayout({
   };
 
   return (
-    <div className="flex h-full">
-      <aside className="flex w-60 flex-col border-r border-white/10 bg-brand-dark">
-        <div className="flex items-center gap-2 border-b border-white/10 px-4 py-4">
-          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-600 text-sm font-bold text-white">
-            TI
-          </span>
-          <div>
-            <p className="text-sm font-semibold text-white">Departamento de TI</p>
-            <p className="text-xs text-brand-light/70">Panel de control</p>
-          </div>
-        </div>
-        <nav className="flex-1 space-y-1 p-3">
-          {nav.map((n) => {
-            const count = counts[n.href] || 0;
-            return (
-              <a
-                key={n.href}
-                href={n.href}
-                className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-brand-light/80 hover:bg-white/10 hover:text-white"
-              >
-                <span>{n.icon}</span>
-                <span className="flex-1">{n.label}</span>
-                {count > 0 && (
-                  <span className="rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white">
-                    {count}
-                  </span>
-                )}
-              </a>
-            );
-          })}
-        </nav>
-        <div className="space-y-1 border-t border-white/10 p-3">
-          <a
-            href="/chat"
-            className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-brand-light/80 hover:bg-white/10 hover:text-white"
-          >
-            <span>💬</span> Ir al chat
-          </a>
-          <SignOutButton />
-        </div>
-      </aside>
-      <main className="flex-1 overflow-y-auto bg-brand-light">{children}</main>
+    <div className="flex min-h-full">
+      <AdminSidebar nav={nav} counts={counts} />
+      <main className="min-w-0 flex-1 overflow-y-auto bg-brand-light">
+        <div className="h-12 lg:hidden" />
+        {children}
+      </main>
     </div>
   );
 }

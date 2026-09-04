@@ -34,7 +34,7 @@ export default async function ConversationsPage() {
         title="Conversaciones"
         subtitle="Historial completo del chat con los usuarios (para auditoría)"
       />
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
           {conversations.length === 0 ? (
             <p className="p-6 text-sm text-slate-500">No hay conversaciones todavía.</p>

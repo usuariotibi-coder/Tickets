@@ -23,7 +23,7 @@ export default async function ProceduresPage() {
         title="Procedimientos"
         subtitle="Documentos que el asistente usa para responder a los usuarios"
       />
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <ProceduresEditor
           procedures={procedures.map((p) => ({ ...p, updatedAt: p.updatedAt.toISOString() }))}
         />

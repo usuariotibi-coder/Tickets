@@ -111,7 +111,7 @@ export default async function UserDetailPage({
   return (
     <div>
       <PageHeader title={user.name} subtitle={user.email} />
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <div className="mb-4">
           <Link href="/admin/users" className="text-sm text-brand-600 hover:underline">
             ← Volver a usuarios

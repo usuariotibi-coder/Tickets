@@ -62,7 +62,7 @@ export default async function TicketDetailPage({ params }: { params: { id: strin
         title={`Solicitud #${ticket.number}`}
         subtitle={`${CATEGORY_LABELS[ticket.category] || ticket.category} · Prioridad ${PRIORITY_LABELS[ticket.priority] || ticket.priority}`}
       />
-      <div className="grid grid-cols-1 gap-6 p-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 p-4 sm:p-6 lg:grid-cols-2">
         <section className="space-y-4">
           <div className="rounded-2xl border border-slate-200 bg-white p-5">
             <h2 className="text-sm font-semibold text-slate-700">{ticket.title}</h2>

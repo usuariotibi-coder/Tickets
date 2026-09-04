@@ -43,7 +43,7 @@ export default async function UsersPage({
         title="Usuarios registrados"
         subtitle="Usuarios que han ingresado al asistente. Haz clic para ver su historial de conversación."
       />
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <form method="GET" className="mb-4">
           <input
             type="text"

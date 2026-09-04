@@ -85,11 +85,11 @@ export function InventoryTable({ items }: { items: Item[] }) {
         />
       )}
 
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+      <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
         {items.length === 0 ? (
           <p className="p-6 text-sm text-slate-500">No hay artículos en el inventario.</p>
         ) : (
-          <table className="w-full text-sm">
+          <table className="w-full min-w-[640px] text-sm">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50 text-left text-xs font-semibold text-slate-500">
                 <th className="px-4 py-3">Artículo</th>

@@ -9,6 +9,9 @@ body {
 
 body {
   @apply bg-brand-light text-slate-900 antialiased;
+  overflow-x: hidden;
+  overscroll-behavior-y: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .chat-scroll::-webkit-scrollbar {
