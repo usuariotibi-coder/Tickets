@@ -143,6 +143,19 @@ async function main() {
     );
   }
 
+  const backfill = await pool.query(
+    `INSERT INTO "Loan" ("ticketId", "userId", "borrowerName", items, "borrowedAt")
+     SELECT t.id, t."userId", COALESCE(u.name, 'Usuario'), t."requestedItems", t."createdAt"
+     FROM "Ticket" t
+     LEFT JOIN "User" u ON u.id = t."userId"
+     WHERE t."requestedItems" IS NOT NULL
+       AND t."requestedItems" <> '[]'::jsonb
+       AND NOT EXISTS (SELECT 1 FROM "Loan" l WHERE l."ticketId" = t.id)`
+  );
+  if (backfill.rowCount && backfill.rowCount > 0) {
+    console.log(`Requisiciones respaldadas de solicitudes anteriores: ${backfill.rowCount}`);
+  }
+
   console.log("Seed completado.");
 }
 
