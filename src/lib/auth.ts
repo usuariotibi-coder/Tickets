@@ -96,6 +96,21 @@ export const authOptions: NextAuthOptions = {
         (session.user as { id: string }).id = token.id as string;
         (session.user as { role: string }).role = token.role as string;
       }
+      // Los usuarios (rol "user") solo conservan acceso mientras su correo
+      // siga en la lista de correos permitidos. Si fue removido, la sesión
+      // queda sin usuario y los accesos redirigen a /login o responden 401.
+      if (token.role === "user") {
+        const email = typeof token.email === "string" ? token.email.toLowerCase().trim() : "";
+        const allowed = email
+          ? await queryOne<AllowedEmailRow>(
+              'SELECT * FROM "AllowedEmail" WHERE email = $1',
+              [email]
+            )
+          : null;
+        if (!allowed) {
+          (session as { user?: unknown }).user = undefined;
+        }
+      }
       return session;
     },
   },

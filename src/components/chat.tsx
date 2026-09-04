@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { signOut, useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 type Msg = {
@@ -28,6 +29,7 @@ function greetingMessage(name: string): Msg {
 
 export default function Chat() {
   const { data: session } = useSession();
+  const router = useRouter();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -56,11 +58,16 @@ export default function Chat() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/chat", {
+const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: content, conversationId }),
       });
+
+      if (res.status === 401) {
+        router.push("/login");
+        return;
+      }
 
       if (!res.ok || !res.body) {
         setMessages((m) => [
